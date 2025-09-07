@@ -2,15 +2,16 @@ const exp = require("express");
 const productApp = exp.Router();
 const handler = require("express-async-handler");
 const Product = require("../Models/ProductModel");
+const { authenticate, authorizeRoles } = require('../middleware/auth')
 
 require('dotenv').config()
 const Groq = require('groq-sdk')
 const groq = new Groq({apikey:process.env.GROQ_API_KEY})
-productApp.post("/product", handler(async (req, res) => {
+productApp.post("/product", authenticate, authorizeRoles('seller'), handler(async (req, res) => {
     // let product = new Product(req.body); 
     // let savedProduct = await product.save();
     // res.status(201).send({ message: "Product created", payload: savedProduct });
-     const {userId,title,useGROQ,description,category,price,images,featured}=req.body;
+     const {title,useGROQ,description,category,price,images,featured}=req.body;
     let finalDescription=description;
     if(useGROQ||(!finalDescription&&finalDescription.trim()==="")){
         const prompt = await groq.chat.completions.create({
@@ -31,7 +32,7 @@ productApp.post("/product", handler(async (req, res) => {
     if(!finalDescription){
         res.status(404).send({message:"either give description or let Ai create description"})
     }
-    let product = new Product({userId,title,useGROQ,description:finalDescription,category,price,images,featured})
+    let product = new Product({userId: req.user.id, title,useGROQ,description:finalDescription,category,price,images,featured})
     const savedProduct = await product.save();
     res.status(201).send({message:"Product created",payload:savedProduct})
 }));
@@ -49,24 +50,24 @@ productApp.get("/products/:userId", handler(async (req, res) => {
 
 productApp.get("/product/:productId", handler(async (req, res) => {
     let { productId } = req.params;
-    let product = await Product.findById(productId).populate("sellerId", "fullname email");
+    let product = await Product.findById(productId).populate("userId", "fullname email");
     if (!product) return res.status(404).send({ message: "Product not found" });
     res.status(200).send({ message: "Product fetched", payload: product });
 }));
 
 
-productApp.put("/product/:productId", handler(async (req, res) => {
+productApp.put("/product/:productId", authenticate, authorizeRoles('seller'), handler(async (req, res) => {
     let { productId } = req.params;
     let updates = req.body;
-    let updatedProduct = await Product.findByIdAndUpdate(productId, updates, { new: true });
+    let updatedProduct = await Product.findOneAndUpdate({ _id: productId, userId: req.user.id }, updates, { new: true });
     if (!updatedProduct) return res.status(404).send({ message: "Product not found" });
     res.status(200).send({ message: "Product updated successfully", payload: updatedProduct });
 }));
 
 
-productApp.delete("/product/:productId", handler(async (req, res) => {
+productApp.delete("/product/:productId", authenticate, authorizeRoles('seller'), handler(async (req, res) => {
     let { productId } = req.params;
-    let deletedProduct = await Product.findByIdAndDelete(productId);
+    let deletedProduct = await Product.findOneAndDelete({ _id: productId, userId: req.user.id });
     if (!deletedProduct) return res.status(404).send({ message: "Product not found" });
     res.status(200).send({ message: "Product deleted", payload: deletedProduct });
 }));

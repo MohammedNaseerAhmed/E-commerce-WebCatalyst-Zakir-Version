@@ -3,6 +3,7 @@ const buyerApp=exp.Router();
 const handler=require('express-async-handler')
 const roles=require('../roles')
 const userModel=require('../Models/UsersModel')
+// Keeping legacy endpoint but discourage its use; prefer /auth/register and /auth/login
 buyerApp.post('/user',handler(roles))
 buyerApp.get('/users',handler(async(req,res)=>{
     let r=await userModel.find({isActive:true,role:"buyer"})
