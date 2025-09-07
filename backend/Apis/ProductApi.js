@@ -3,14 +3,41 @@ const productApp = exp.Router();
 const handler = require("express-async-handler");
 const Product = require("../Models/ProductModel");
 
+require('dotenv').config()
+const Groq = require('groq-sdk')
+const groq = new Groq({apikey:process.env.GROQ_API_KEY})
 productApp.post("/product", handler(async (req, res) => {
-    let product = new Product(req.body); 
-    let savedProduct = await product.save();
-    res.status(201).send({ message: "Product created", payload: savedProduct });
+    // let product = new Product(req.body); 
+    // let savedProduct = await product.save();
+    // res.status(201).send({ message: "Product created", payload: savedProduct });
+     const {userId,title,useGROQ,description,category,price,images,featured}=req.body;
+    let finalDescription=description;
+    if(useGROQ||(!finalDescription&&finalDescription.trim()==="")){
+        const prompt = await groq.chat.completions.create({
+            model:"llama-3.3-70b-versatile",
+            messages:[
+                {
+                    role:"system",
+                    content:"you are an AI that writes nice product description in about 10 words "
+                },{
+                    role:"user",
+                    content:`write a short description on hand made products. product:${title},category:${category}`
+                }
+            ]
+        })
+        finalDescription = prompt.choices[0].message.content
+    }
+    //this if is beacuse when user doesnt give description but also doesnt let AI create a description
+    if(!finalDescription){
+        res.status(404).send({message:"either give description or let Ai create description"})
+    }
+    let product = new Product({userId,title,useGROQ,description:finalDescription,category,price,images,featured})
+    const savedProduct = await product.save();
+    res.status(201).send({message:"Product created",payload:savedProduct})
 }));
 
 productApp.get("/products", handler(async (req, res) => {
-    let products = await Product.find().populate("sellerId", "fullname email");
+    let products = await Product.find().populate("userId", "fullname email");
     res.status(200).send({ message: "All products fetched", payload: products });
 }));
 

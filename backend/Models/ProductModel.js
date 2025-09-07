@@ -11,6 +11,10 @@ const productSchema = new mongoose.Schema({
         required: true,
     
     },
+    useGROQ:{
+        type:Boolean,
+        default:false
+    },
     description: {
         type: String,
       required: true
@@ -41,5 +45,5 @@ const productSchema = new mongoose.Schema({
  }
 }, { strict: 'throw' });
 
-const Product = mongoose.model('products', productSchema);
+const Product = mongoose.model('product', productSchema);
 module.exports = Product;

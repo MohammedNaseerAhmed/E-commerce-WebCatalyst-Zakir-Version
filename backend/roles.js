@@ -6,7 +6,7 @@ let user=req.body
     let r1=await userModel.findOne({email:user.email})
    
     if(r1!=null){
-        if(user.role===r.role){
+        if(user.role===r1.role){
             res.status(200).send({message:user.role,payload:r1})
         }
         else{

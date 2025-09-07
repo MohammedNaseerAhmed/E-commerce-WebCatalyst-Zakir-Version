@@ -5,7 +5,7 @@ const roles=require('../roles')
 const userModel=require('../Models/UsersModel')
 buyerApp.post('/user',handler(roles))
 buyerApp.get('/users',handler(async(req,res)=>{
-    let r=await userModel.findOne({isActive:true})
+    let r=await userModel.find({isActive:true,role:"buyer"})
     res.status(200).send({message:"getting buyer details",payload:r})
 }))
 buyerApp.get("/user/:userId", handler(async (req, res) => {

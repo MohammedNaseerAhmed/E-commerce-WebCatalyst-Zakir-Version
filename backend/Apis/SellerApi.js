@@ -5,7 +5,7 @@ const handler=require('express-async-handler')
 const roles=require('../roles')
 sellerApp.post('/user',handler(roles))
 sellerApp.get('/users',handler(async(req,res)=>{
-    let r=await userModel.findOne({isActive:true})
+    let r=await userModel.find({isActive:true,role:"seller"})
     res.status(200).send({message:"getting seller Details",payload:r})
 }));
 sellerApp.get("/user/:userId", handler(async (req, res) => {

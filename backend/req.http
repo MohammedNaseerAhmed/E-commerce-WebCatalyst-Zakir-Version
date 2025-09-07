@@ -54,7 +54,8 @@ Content-Type: application/json
 {
   "userId": "64fa1c8e8b9c2a001c9d5678",
   "title": "Handmade Silver Necklace",
-  "description": "A beautiful handcrafted silver necklace with intricate designs, perfect for special occasions.",
+  "useGROQ":"true",
+  "description": "",
   "category": "jewelry",
   "price": 2500,
   "images": [
@@ -142,6 +143,14 @@ Content-Type: application/json
     "https://example.com/images/necklace1.jpg",
     "https://example.com/images/necklace2.jpg"
   ],
-  "featured": true
+  "featured": true,
+  "useGROQ":false
 }
 
+###
+post http://localhost:3000/chatbot-api/
+Content-Type: application/json
+
+{
+  "query":" price under 3000 "
+}
